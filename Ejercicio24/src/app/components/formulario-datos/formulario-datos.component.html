@@ -1,0 +1,29 @@
+<div class="container">
+    <form>
+        <div class="form-group">
+            <label for="cantidadHorasSimulacion"> Horas simulacion: </label>
+            <input
+                type="number"
+                class="form-control"
+                id="cantidadHorasSimulacion"
+                [formControl]="cantidadHorasSimulacionControl"
+                [(ngModel)]="horasSimulacion"
+                placeholder="Cantidad horas"
+            >
+
+            <div
+                *ngIf="cantidadHorasSimulacionControl.invalid && (cantidadHorasSimulacionControl.dirty || cantidadHorasSimulacionControl.touched)"
+            >
+                Horas requerido y mayor a 0
+            </div>
+        </div>
+        <br>
+        <ng-container *ngIf="!deshabilitarBoton; else elseTemplate">
+            <button type="submit" class="btn btn-primary" (click)="start()">Start</button>
+        </ng-container>
+        <ng-template #elseTemplate>
+            <button type="submit" class="btn btn-secondary" (click)="stop()">Stop</button>
+        </ng-template>
+        <br>
+    </form>
+</div>
