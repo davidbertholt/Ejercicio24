@@ -1,6 +1,6 @@
 import { createReducer, on } from "@ngrx/store";
 import { ICliente } from "src/app/Interfaces/ICliente";
-import { CLIENTE_SIENDO_ATENDIDO, CLIENTE_PENDIENTE, CLIENTE_FINALIZADO } from "src/app/utils/estados";
+import { CLIENTE_SIENDO_ATENDIDO, CLIENTE_PENDIENTE, CLIENTE_FINALIZADO } from "src/app/utils/nombreDeEstados";
 import * as clienteStates from '../actions/cliente.action';
 
 export const inicialColaClientesState: ICliente[] = []

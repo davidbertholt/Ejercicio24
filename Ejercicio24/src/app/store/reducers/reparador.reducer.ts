@@ -1,5 +1,5 @@
 import { createReducer, on } from "@ngrx/store";
-import { REPARADOR_LIBRE, REPARADOR_OCUPADO } from "src/app/utils/estados";
+import { REPARADOR_LIBRE, REPARADOR_OCUPADO } from "src/app/utils/nombreDeEstados";
 import * as reparadorStates from '../actions/reparador.action';
 
 export const inicialReparadorState = {

@@ -1,7 +1,14 @@
 import { ICliente } from "./ICliente";
 
+export interface I3Reparadores {
+  [key: number]: IReparador,
+}
+
 export interface IReparador {
-    numero: number,
-    estado: string,
-    cliente: ICliente,
+  estado: string,
+  cliente?: ICliente,
+  tiempoAtencion: number,
+  tiempoProximaAtencion: number,
+  precio: number,
+  gastos: number,
 }

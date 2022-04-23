@@ -1,0 +1,13 @@
+table {
+  display: block;
+  overflow: auto;
+}
+
+.static {
+  position: absolute;
+  background-color: grey;
+}
+
+.first-col {
+  padding-left: 74.5px!important;
+}

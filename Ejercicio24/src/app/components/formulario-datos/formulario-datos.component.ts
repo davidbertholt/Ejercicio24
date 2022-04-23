@@ -1,42 +1,37 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
+import { RelojService } from 'src/app/services/reloj.service';
 
 @Component({
   selector: 'app-formulario-datos',
   templateUrl: './formulario-datos.component.html',
-  styleUrls: ['./formulario-datos.component.css']
 })
 
-export class FormularioDatosComponent implements OnInit {
-
-  @Output() horasSimulacionEmit = new EventEmitter<number>();
+export class FormularioDatosComponent {
 
   cantidadReparadoresControl!: FormControl;
   cantidadHorasSimulacionControl!: FormControl;
 
   deshabilitarBoton: boolean = false;
 
-  horasSimulacion = 100;
+  horasSimulacion = 1;
 
-  constructor() {
+  constructor(
+    private relojService: RelojService
+  ) {
     this.cantidadHorasSimulacionControl = new FormControl(this.horasSimulacion,[
       Validators.required,
       Validators.min(1)
     ]);
    }
 
-  ngOnInit(): void {
-  }
-
   start = () => {
     this.deshabilitarBoton = !this.deshabilitarBoton;
-    this.horasSimulacionEmit.emit(this.horasSimulacion);
-    console.log(this.horasSimulacion);
-    
+    this.relojService.startReloj(this.horasSimulacion);
   }
 
-  stop = () => {
+  restart = () => {
+    this.relojService.restart();
     this.deshabilitarBoton = !this.deshabilitarBoton
   }
-
 }

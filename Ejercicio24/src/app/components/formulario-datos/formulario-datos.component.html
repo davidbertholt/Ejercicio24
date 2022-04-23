@@ -18,12 +18,8 @@
             </div>
         </div>
         <br>
-        <ng-container *ngIf="!deshabilitarBoton; else elseTemplate">
-            <button type="submit" class="btn btn-primary" (click)="start()">Start</button>
-        </ng-container>
-        <ng-template #elseTemplate>
-            <button type="submit" class="btn btn-secondary" (click)="stop()">Stop</button>
-        </ng-template>
+          <button [disabled]="deshabilitarBoton" type="submit" class="btn btn-primary" (click)="start()">Start</button>
+          <button [disabled]="!deshabilitarBoton" type="submit" class="btn btn-success" (click)="restart()">Reset</button>
         <br>
     </form>
 </div>

@@ -1,33 +1,48 @@
 <div class="container">
-    {{relojMaximo}}
+  <div *ngIf="historialEventos.length" >
+    Precio Final: {{precioFinal | number}}
+    <br>
+    Costo Final: {{costoFinal | number}}
+    <br>
+    Ganancia: {{(precioFinal-costoFinal) | number}}
 
-    <table class="table table-hover">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">First</th>
-            <th scope="col">Last</th>
-            <th scope="col">Handle</th>
-          </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th scope="row">1</th>
-                <td>Mark</td>
-                <td>Otto</td>
-                <td>@mdo</td>
-            </tr>
-            <tr>
-                <th scope="row">2</th>
-                <td>Jacob</td>
-                <td>Thornton</td>
-                <td>@fat</td>
-            </tr>
-            <tr>
-                <th scope="row">3</th>
-                <td colspan="2">Larry the Bird</td>
-                <td>@twitter</td>
-            </tr>
-        </tbody>
+    <table
+      class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th scope="col" *ngFor="let header of tableHeader"> {{ header }} </th>
+          <!-- <th *ngFor="let cliente of colaClientes; let i=index" scope="col">Cliente {{i}}</th> -->
+
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let evento of historialEventos; let i=index" >
+          <th scope="row">{{ evento.reloj }}</th>
+          <td>{{ evento.evento }}</td>
+          <td>{{ evento.cliente?.orden || '-' }}</td>
+          <td>{{ evento.largoCola }}</td>
+          <td>{{ evento.llegadas?.tiempoEntreLlegadas }}</td>
+          <td>{{ evento.llegadas?.tiempoProximaLlegada }}</td>
+          <td>{{ evento.reparadores[reparador1].estado }}</td>
+          <td>{{ evento.reparadores[reparador1].cliente?.orden || '-' }}</td>
+          <td>{{ evento.reparadores[reparador1].tiempoAtencion || '-' }}</td>
+          <td>{{ evento.reparadores[reparador1].tiempoProximaAtencion || '-' }}</td>
+          <td>{{ evento.reparadores[reparador1].precio || '-' }}</td>
+          <td>{{ evento.reparadores[reparador1].gastos || '-' }}</td>
+          <td>{{ evento.reparadores[reparador2].estado }}</td>
+          <td>{{ evento.reparadores[reparador2].cliente?.orden || '-' }}</td>
+          <td>{{ evento.reparadores[reparador2].tiempoAtencion || '-' }}</td>
+          <td>{{ evento.reparadores[reparador2].tiempoProximaAtencion || '-' }}</td>
+          <td>{{ evento.reparadores[reparador2].precio || '-' }}</td>
+          <td>{{ evento.reparadores[reparador2].gastos || '-' }}</td>
+          <td>{{ evento.reparadores[reparador3].estado }}</td>
+          <td>{{ evento.reparadores[reparador3].cliente?.orden || '-' }}</td>
+          <td>{{ evento.reparadores[reparador3].tiempoAtencion || '-' }}</td>
+          <td>{{ evento.reparadores[reparador3].tiempoProximaAtencion || '-' }}</td>
+          <td>{{ evento.reparadores[reparador3].precio || '-' }}</td>
+          <td>{{ evento.reparadores[reparador3].gastos || '-' }}</td>
+        </tr>
+      </tbody>
     </table>
+  </div>
 </div>
