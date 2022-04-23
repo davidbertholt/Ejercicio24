@@ -83,9 +83,7 @@ export class GestorEventosService {
       const reparadorLibre = this.hayReparadorLibre();
 
       if(clienteEsperando && reparadorLibre) {
-        this.tiempoProximoEvento += 1;
         this.generarInicioAtencion(clienteEsperando, Number(reparadorLibre))
-
       } else {
 
         const proxEvento = Math.min(this.tiempoProximaLLegada, this.finReparador1, this.finReparador2, this.finReparador3);
