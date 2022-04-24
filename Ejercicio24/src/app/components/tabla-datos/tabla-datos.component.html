@@ -6,8 +6,9 @@
     <br>
     Ganancia: {{(precioFinal-costoFinal) | number}}
 
-    <table
-      class="table table-striped align-middle">
+
+    <table class="table table-striped align-middle">
+      <caption> Tabla de resultados </caption>
       <thead>
         <tr>
           <th scope="col" *ngFor="let header of tableHeader"> {{ header }} </th>
@@ -16,7 +17,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let evento of historialEventos; let i=index" >
+        <tr *ngFor="let evento of historialEventos" >
           <th scope="row">{{ evento.reloj }}</th>
           <td>{{ evento.evento }}</td>
           <td>{{ evento.cliente?.orden || '-' }}</td>

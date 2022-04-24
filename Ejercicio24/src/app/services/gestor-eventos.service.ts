@@ -9,7 +9,7 @@ import { IReparador } from '../Interfaces/IReparador';
 // constantes
 import { MAX_NUMBER } from '../utils/contantes';
 import { inicialAppState } from '../utils/estados';
-import { LLEGADA_CLIENTE } from '../utils/eventos';
+import { FIN_ATENCION_CLIENTE, LLEGADA_CLIENTE } from '../utils/eventos';
 
 // funciones
 import { horasAMiutos, obtenerPrecioAtencion, obtenerTiempoAtencion, obtenerTiempoEntreLlegada } from '../utils/funciones_datos';
@@ -253,7 +253,7 @@ export class GestorEventosService {
     const nuevoEstado = {
       ...this.estadoActual,
       reloj: relojNuevo,
-      evento: REPARADOR_LIBRE,
+      evento: FIN_ATENCION_CLIENTE,
       reparadores: reparadores,
     }
 
@@ -295,7 +295,7 @@ export class GestorEventosService {
     const nuevoEstado = {
       ...this.estadoActual,
       reloj: relojNuevo,
-      evento: REPARADOR_LIBRE,
+      evento: FIN_ATENCION_CLIENTE,
       reparadores: reparadores,
     }
 

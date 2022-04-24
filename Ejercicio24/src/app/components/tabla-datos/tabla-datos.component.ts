@@ -38,8 +38,6 @@ export class TablaDatosComponent implements OnInit {
   }
 
   resetear() {
-    console.log('this.resetear');
-
     this.historialEventos = [];
   }
 
