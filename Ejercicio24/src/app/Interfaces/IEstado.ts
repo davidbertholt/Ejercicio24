@@ -10,6 +10,6 @@ export interface IEstadoActual {
   llegadas: {
       tiempoEntreLlegadas: number,
       tiempoProximaLlegada: number
-    },
-    reparadores: I3Reparadores
+  },
+  reparadores: I3Reparadores
 }

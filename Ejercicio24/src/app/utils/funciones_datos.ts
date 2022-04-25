@@ -4,15 +4,14 @@ function obtenerUniforme (limiteInferior: number, limiteSuperior: number)  {
     const amplitud = limiteSuperior - limiteInferior;
     const rnd = Math.random();
     return limiteInferior + rnd * amplitud;
-};
+}
 
 function obtenerExponencial (media: number)  {
     const rnd = Math.random();
     return -media * Math.log(1-rnd);
-};
+}
 
-export function horasAMiutos ( horas: number )  {return horas * 60;};
-
+export function horasAMiutos ( horas: number )  {return horas * 60;}
 export function formateoMinutosAString (tiempo: number)  {
     const horas = Math.trunc(tiempo / 60);
     const minutos = tiempo % 60;

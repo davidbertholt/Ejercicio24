@@ -2,20 +2,20 @@ import { Injectable } from '@angular/core';
 
 // Observables
 import { Subject } from 'rxjs';
-import { ICliente } from '../Interfaces/ICliente';
 import { IEstadoActual } from '../Interfaces/IEstado';
-import { IReparador } from '../Interfaces/IReparador';
+import { I3Reparadores } from '../Interfaces/IReparador';
 
 // constantes
 import { MAX_NUMBER } from '../utils/contantes';
 import { inicialAppState } from '../utils/estados';
-import { FIN_ATENCION_CLIENTE, LLEGADA_CLIENTE } from '../utils/eventos';
 
 // funciones
-import { horasAMiutos, obtenerPrecioAtencion, obtenerTiempoAtencion, obtenerTiempoEntreLlegada } from '../utils/funciones_datos';
+import { horasAMiutos, obtenerTiempoEntreLlegada } from '../utils/funciones_datos';
 
 // estado predefinido
-import { CLIENTE_FINALIZADO, CLIENTE_PENDIENTE, CLIENTE_SIENDO_ATENDIDO, REPARADOR_LIBRE, REPARADOR_OCUPADO } from '../utils/nombreDeEstados';
+import { REPARADOR_LIBRE } from '../utils/nombreDeEstados';
+import { GestsorAtencionService } from './gestsor-atencion.service';
+import { GestsorLlegadasService } from './gestsor-llegadas.service';
 
 @Injectable({
   providedIn: 'root'
@@ -39,12 +39,19 @@ export class GestorEventosService {
   finReparador2 = MAX_NUMBER + 2;
   finReparador3 = MAX_NUMBER + 3;
 
-  tiempoProximoEvento = 0;
-
   estadoActual!: IEstadoActual;
 
-  constructor() {
+  reparadorEnEspera!: string | undefined; // este se va a setear cada vez que se libera un reparador en un fin atencion
+
+  constructor(
+    private gestsorLlegadasService: GestsorLlegadasService,
+    private gestsorAtencionService: GestsorAtencionService
+    ) {
     this.setearInicial();
+  }
+
+  setearReparadorEnEspera(reparadorId: string) {
+    this.reparadorEnEspera = reparadorId;
   }
 
   setearInicial () {
@@ -52,7 +59,6 @@ export class GestorEventosService {
     this.finReparador1 = MAX_NUMBER + 1;
     this.finReparador2 = MAX_NUMBER + 2;
     this.finReparador3 = MAX_NUMBER + 3;
-    this.tiempoProximoEvento = 0;
     this.precioTotal = 0;
     this.gastoTotal = 0;
   }
@@ -67,51 +73,6 @@ export class GestorEventosService {
     const minutos = horasAMiutos(horas)
     this.iniciarSimulacion(minutos)
   }
-
-  iniciarSimulacion (tiempo: number) {
-    this.generarEstadoInicial();
-
-    // llamar al tiempo que sigue
-    this.tiempoProximoEvento = this.estadoActual.llegadas.tiempoProximaLlegada;
-    this.tiempoProximaLLegada = this.estadoActual.llegadas.tiempoProximaLlegada;
-
-
-    while (this.tiempoProximoEvento < tiempo) {
-      this.gestorSimulacion.next(this.estadoActual)
-
-      const clienteEsperando = this.hayClienteEsperando();
-      const reparadorLibre = this.hayReparadorLibre();
-
-      if(clienteEsperando && reparadorLibre) {
-        this.generarInicioAtencion(clienteEsperando, Number(reparadorLibre))
-      } else {
-
-        const proxEvento = Math.min(this.tiempoProximaLLegada, this.finReparador1, this.finReparador2, this.finReparador3);
-        this.tiempoProximoEvento = proxEvento;
-
-        switch (proxEvento) {
-          case this.tiempoProximaLLegada:
-            this.generarProximaLlegada()
-            break;
-          case this.finReparador1:
-            this.generarFinAtencion(1);
-            break;
-          case this.finReparador2:
-            this.generarFinAtencion(2)
-            break;
-          case this.finReparador3:
-            this.generarFinAtencion(3)
-            break;
-        }
-      }
-    }
-    this.precioEmitir.next(this.precioTotal);
-    this.gastosEmitir.next(this.gastoTotal);
-   }
-
-  hayClienteEsperando() {
-    return this.estadoActual.colaClientes.find((cliente) => cliente.estado === CLIENTE_PENDIENTE);
-   }
 
   hayReparadorLibre() {
     const keys = Object.keys(this.estadoActual.reparadores);
@@ -135,171 +96,85 @@ export class GestorEventosService {
     this.estadoActual = {...nuevoEstado}
   }
 
-  generarProximaLlegada () {
-    // calculamos el orden del cliente
-    const nuevoOrden =  this.estadoActual.colaClientes?.length + 1 ?? 1;
-    const nuevoCliente: ICliente = {
-      estado: CLIENTE_PENDIENTE,
-      orden: nuevoOrden,
-    };
+  iniciarSimulacion (tiempo: number) {
+    this.generarEstadoInicial();
+    this.gestorSimulacion.next(this.estadoActual)
 
-    this.estadoActual.largoCola += 1;
-    this.estadoActual.cliente = nuevoCliente;
+    this.tiempoProximaLLegada = this.estadoActual.llegadas.tiempoProximaLlegada;
 
-    const reparadorLibre = this.hayReparadorLibre();
-    const reparadores = {...this.estadoActual.reparadores};
+    let proxEvento = this.estadoActual.llegadas.tiempoProximaLlegada;
 
-    if(reparadorLibre) {
-      const reparadorOcupado = this.generarReparadorOcupado(nuevoCliente);
-      reparadores[Number(reparadorLibre)] = {...reparadorOcupado};
-      nuevoCliente.estado = CLIENTE_SIENDO_ATENDIDO;
-      this.estadoActual.largoCola -= 1;
-      switch(reparadorLibre) {
-        case '1':
-          this.finReparador1 = this.estadoActual.reloj + reparadorOcupado.tiempoProximaAtencion;
+    while (proxEvento < tiempo) {
+      this.reparadorEnEspera = this.hayReparadorLibre();
+
+      let nuevoEstado = {...this.estadoActual};
+
+      nuevoEstado.reloj= proxEvento;
+
+      switch (proxEvento) {
+
+        case this.tiempoProximaLLegada:
+          nuevoEstado = {
+            ...this.gestsorLlegadasService.generarNuevaLLegada(nuevoEstado, this.reparadorEnEspera),
+          }
+          this.actualizarFinReparacion(nuevoEstado.reparadores, Number(this.reparadorEnEspera));
+
+          this.tiempoProximaLLegada = nuevoEstado.llegadas.tiempoProximaLlegada;
           break;
-        case '2':
-          this.finReparador2 = this.estadoActual.reloj + reparadorOcupado.tiempoProximaAtencion;
+
+        case this.finReparador1:
+          const index1 = 1;
+          nuevoEstado = {
+            ...this.gestsorAtencionService.finalizarAtencionCliente(nuevoEstado, index1),
+          }
+          this.actualizarFinReparacion(nuevoEstado.reparadores, index1);
           break;
-        case '3':
-          this.finReparador3 = this.estadoActual.reloj + reparadorOcupado.tiempoProximaAtencion;
+
+        case this.finReparador2:
+          const index2 = 2;
+          nuevoEstado = {
+            ...this.gestsorAtencionService.finalizarAtencionCliente(nuevoEstado, index2),
+          }
+          this.actualizarFinReparacion(nuevoEstado.reparadores, index2);
+          break;
+
+        case this.finReparador3:
+          const index3 = 3;
+          nuevoEstado = {
+            ...this.gestsorAtencionService.finalizarAtencionCliente(nuevoEstado, index3),
+          }
+          this.actualizarFinReparacion(nuevoEstado.reparadores, index3);
           break;
       }
+
+      this.gestorSimulacion.next(nuevoEstado);
+
+      this.estadoActual = {...nuevoEstado}
+
+      proxEvento = Math.min(this.tiempoProximaLLegada, this.finReparador1, this.finReparador2, this.finReparador3);
+
     }
+    this.precioEmitir.next(this.precioTotal);
+    this.gastosEmitir.next(this.gastoTotal);
+   }
 
-    const nuevaLLegada = obtenerTiempoEntreLlegada();
-
-    const nuevoEstado = {
-      ...this.estadoActual,
-      reloj: this.tiempoProximaLLegada,
-      evento: LLEGADA_CLIENTE,
-      colaClientes: [...this.estadoActual.colaClientes, nuevoCliente],
-      llegadas: {
-        tiempoEntreLlegadas: nuevaLLegada,
-        tiempoProximaLlegada: this.tiempoProximaLLegada + nuevaLLegada,
-      },
-      reparadores: reparadores,
-    }
-
-    this.tiempoProximaLLegada += nuevaLLegada;
-    this.estadoActual = Object.assign({}, nuevoEstado)
-
-  }
-
-  generarReparadorOcupado (cliente: ICliente) {
-    const nuevoTiempoAtencion = obtenerTiempoAtencion();
-    const nuevoPrecio = nuevoTiempoAtencion > 30 ? 0 : obtenerPrecioAtencion();
-
-    this.precioTotal += nuevoPrecio;
-    this.gastoTotal += nuevoPrecio * 0.25;
-
-
-    return {
-      estado: REPARADOR_OCUPADO,
-      cliente: cliente,
-      tiempoAtencion: nuevoTiempoAtencion,
-      tiempoProximaAtencion: this.tiempoProximaLLegada + nuevoTiempoAtencion,
-      precio: nuevoPrecio,
-      gastos: nuevoPrecio * 0.25,
-    }
-
-  }
-  generarReparadorLibre (): IReparador{
-    return {
-      estado: REPARADOR_LIBRE,
-      cliente: undefined,
-      tiempoAtencion: 0,
-      tiempoProximaAtencion: 0,
-      precio: 0,
-      gastos: 0,
-    }
-  }
-
-  finalizarAtencionCliente(cliente: ICliente | undefined) {
-    const colaClientes: ICliente[] = this.estadoActual.colaClientes;
-
-    const clienteActualizar = colaClientes.find((cli: { orden: number; }) => cli.orden === cliente?.orden);
-    if(clienteActualizar)
-      clienteActualizar.estado= CLIENTE_FINALIZADO;
-  }
-
-
-  generarInicioAtencion(cliente: ICliente, reparador: number) {
-
-    cliente.estado = CLIENTE_SIENDO_ATENDIDO;
-
-    const reparadorNuevo = this.generarReparadorOcupado(cliente);
-
-    this.estadoActual.largoCola -= 1;
-
-    const reparadores = {...this.estadoActual.reparadores};
-
-    reparadores[reparador] = {...reparadorNuevo};
-
-    let relojNuevo = reparadores[reparador].tiempoProximaAtencion ;
-
+  actualizarFinReparacion(reparadores: I3Reparadores, reparador: number) {
     switch(reparador) {
       case 1:
-        this.finReparador1 = this.estadoActual.reloj + reparadorNuevo.tiempoProximaAtencion;
+        this.finReparador1 = this.getTiempoReparador(reparadores, reparador);
         break;
       case 2:
-        this.finReparador2 = this.estadoActual.reloj + reparadorNuevo.tiempoProximaAtencion;
+        this.finReparador2 = this.getTiempoReparador(reparadores, reparador);
         break;
       case 3:
-        this.finReparador3 = this.estadoActual.reloj + reparadorNuevo.tiempoProximaAtencion;
+        this.finReparador3 = this.getTiempoReparador(reparadores, reparador);
         break;
     }
-
-    const nuevoEstado = {
-      ...this.estadoActual,
-      reloj: relojNuevo,
-      evento: FIN_ATENCION_CLIENTE,
-      reparadores: reparadores,
-    }
-
-
-    this.estadoActual = Object.assign({}, nuevoEstado)
   }
 
-  generarFinAtencion (reparador: number) {
-    const clienteEsperando = this.hayClienteEsperando();
-
-    const reparadores = {...this.estadoActual.reparadores};
-
-    this.finalizarAtencionCliente(reparadores[reparador].cliente);
-
-    let relojNuevo = reparadores[reparador].tiempoProximaAtencion ;
-    let reparadorNuevo!: IReparador;
-
-    if(clienteEsperando) {
-      reparadorNuevo = this.generarReparadorOcupado(clienteEsperando);
-      clienteEsperando.estado = CLIENTE_SIENDO_ATENDIDO;
-      this.estadoActual.largoCola -= 1;
-
-    } else {
-      reparadorNuevo = this.generarReparadorLibre();
-    }
-    reparadores[reparador] = {...reparadorNuevo};
-    switch(reparador) {
-      case 1:
-        this.finReparador1 += clienteEsperando? reparadorNuevo.tiempoProximaAtencion : MAX_NUMBER;
-        break;
-      case 2:
-        this.finReparador2 += clienteEsperando? reparadorNuevo.tiempoProximaAtencion : MAX_NUMBER;
-        break;
-      case 3:
-        this.finReparador3 += clienteEsperando? reparadorNuevo.tiempoProximaAtencion : MAX_NUMBER;
-        break;
-    }
-
-    const nuevoEstado = {
-      ...this.estadoActual,
-      reloj: relojNuevo,
-      evento: FIN_ATENCION_CLIENTE,
-      reparadores: reparadores,
-    }
-
-
-    this.estadoActual = Object.assign({}, nuevoEstado)
+  getTiempoReparador(reparadores: I3Reparadores, reparador: number) {
+    return reparadores[reparador].tiempoProximaAtencion === 0?
+        MAX_NUMBER :
+        reparadores[reparador].tiempoProximaAtencion;
   }
 }
