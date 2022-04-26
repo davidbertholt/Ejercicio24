@@ -30,9 +30,13 @@ export class TablaDatosComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.gestorSimulacion.gestorSimulacion$.subscribe(data =>
-      data === 'reset'? this.resetear() : this.historialEventos.push(data)
-    );
+    this.gestorSimulacion.gestorSimulacion$.subscribe(data => {
+      if (data === 'reset') {
+        this.resetear()
+      } else {
+        this.historialEventos.push(data);
+      }
+    });
     this.gestorSimulacion.gastosEmitir$.subscribe(data => this.costoFinal = data)
     this.gestorSimulacion.preciosEmitir$.subscribe(data => this.precioFinal = data)
   }

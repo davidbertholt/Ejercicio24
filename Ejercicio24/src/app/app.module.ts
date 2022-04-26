@@ -7,6 +7,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { TablaDatosComponent } from './components/tabla-datos/tabla-datos.component';
 import { FormularioDatosComponent } from './components/formulario-datos/formulario-datos.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MinutosAHorasPipe } from './pipes/minutos-ahoras.pipe';
 
 @NgModule({
   declarations: [
@@ -14,6 +15,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     NavbarComponent,
     TablaDatosComponent,
     FormularioDatosComponent,
+    MinutosAHorasPipe,
   ],
   imports: [
     BrowserModule,

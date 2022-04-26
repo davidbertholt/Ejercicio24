@@ -41,7 +41,7 @@ export class GestorEventosService {
 
   estadoActual!: IEstadoActual;
 
-  reparadorEnEspera!: string | undefined; // este se va a setear cada vez que se libera un reparador en un fin atencion
+  reparadorEnEspera!: string | undefined;
 
   constructor(
     private gestsorLlegadasService: GestsorLlegadasService,
@@ -108,7 +108,7 @@ export class GestorEventosService {
       this.reparadorEnEspera = this.hayReparadorLibre();
 
       let nuevoEstado = {...this.estadoActual};
-
+      let colaPrevia = 0;
       nuevoEstado.reloj= proxEvento;
 
       switch (proxEvento) {
@@ -117,31 +117,52 @@ export class GestorEventosService {
           nuevoEstado = {
             ...this.gestsorLlegadasService.generarNuevaLLegada(nuevoEstado, this.reparadorEnEspera),
           }
+
+          if (this.reparadorEnEspera) {
+            this.actualizarPrecioGastos(nuevoEstado.reparadores[Number(this.reparadorEnEspera)].precio, nuevoEstado.reparadores[Number(this.reparadorEnEspera)].gastos);
+          }
+
           this.actualizarFinReparacion(nuevoEstado.reparadores, Number(this.reparadorEnEspera));
 
           this.tiempoProximaLLegada = nuevoEstado.llegadas.tiempoProximaLlegada;
           break;
 
         case this.finReparador1:
+          colaPrevia = nuevoEstado.largoCola;
           const index1 = 1;
           nuevoEstado = {
             ...this.gestsorAtencionService.finalizarAtencionCliente(nuevoEstado, index1),
+          }
+          // Si tengo un fin de atencion, pero en medio la cola cambio, quiere edcir que atendi a alguien
+          if(colaPrevia !== nuevoEstado.largoCola) {
+            this.actualizarPrecioGastos(nuevoEstado.reparadores[index1].precio, nuevoEstado.reparadores[index1].gastos)
           }
           this.actualizarFinReparacion(nuevoEstado.reparadores, index1);
           break;
 
         case this.finReparador2:
+          colaPrevia = nuevoEstado.largoCola;
           const index2 = 2;
           nuevoEstado = {
             ...this.gestsorAtencionService.finalizarAtencionCliente(nuevoEstado, index2),
+          }
+          // Si tengo un fin de atencion, pero en medio la cola cambio, quiere edcir que atendi a alguien
+          if(colaPrevia !== nuevoEstado.largoCola) {
+            this.actualizarPrecioGastos(nuevoEstado.reparadores[index2].precio, nuevoEstado.reparadores[index2].gastos)
           }
           this.actualizarFinReparacion(nuevoEstado.reparadores, index2);
           break;
 
         case this.finReparador3:
+          colaPrevia = nuevoEstado.largoCola;
           const index3 = 3;
           nuevoEstado = {
             ...this.gestsorAtencionService.finalizarAtencionCliente(nuevoEstado, index3),
+          }
+
+          // Si tengo un fin de atencion, pero en medio la cola cambio, quiere edcir que atendi a alguien
+          if(colaPrevia !== nuevoEstado.largoCola) {
+            this.actualizarPrecioGastos(nuevoEstado.reparadores[index3].precio, nuevoEstado.reparadores[index3].gastos)
           }
           this.actualizarFinReparacion(nuevoEstado.reparadores, index3);
           break;
@@ -176,5 +197,11 @@ export class GestorEventosService {
     return reparadores[reparador].tiempoProximaAtencion === 0?
         MAX_NUMBER :
         reparadores[reparador].tiempoProximaAtencion;
+  }
+
+  actualizarPrecioGastos (precioNuevo: number, gastosNuevos: number): void {
+    this.gastoTotal += gastosNuevos;
+    this.precioTotal += precioNuevo;
+
   }
 }

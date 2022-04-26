@@ -1,11 +1,11 @@
 table {
   display: block;
-  overflow: auto;
+  overflow-x: auto;
 }
 
 .static {
   position: absolute;
-  background-color: grey;
+  background-color: azure;
 }
 
 .first-col {

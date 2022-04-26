@@ -1,4 +1,4 @@
-export const MEDIA_EXPONENCIAL = 7;
+export const MEDIA_EXPONENCIAL = 60/7; // 7 llegadas por hora
 export const INFERIOR_PRECIO = 100;
 export const SUPERIOR_PRECIO = 400;
 export const INFERIOR_LLEGADA = 13;

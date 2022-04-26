@@ -4,15 +4,15 @@ import { REPARADOR_LIBRE, REPARADOR_OCUPADO } from "./nombreDeEstados";
 
 export function generarReparadorOcupado (tiempoActual: number): IReparador {
   const nuevoTiempoAtencion = obtenerTiempoAtencion();
-  const nuevoPrecio = nuevoTiempoAtencion > 30 ? 0 : obtenerPrecioAtencion();
+  const nuevoPrecioTentativo = obtenerPrecioAtencion();
 
   return {
     estado: REPARADOR_OCUPADO,
     cliente: undefined,
     tiempoAtencion: nuevoTiempoAtencion,
     tiempoProximaAtencion: tiempoActual + nuevoTiempoAtencion,
-    precio: nuevoPrecio,
-    gastos: nuevoPrecio * 0.25,
+    precio: nuevoTiempoAtencion > 30 ? 0 : nuevoPrecioTentativo,
+    gastos: nuevoPrecioTentativo * 0.25,
   }
 }
 

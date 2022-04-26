@@ -18,7 +18,7 @@ export class GestsorAtencionService {
     const clienteReparador = estadoActual.reparadores[reparador].cliente;
     const indexClienteAFinalizar = estadoActual.colaClientes.findIndex((cli: { orden: number | undefined; }) => cli.orden === clienteReparador?.orden ) ?? undefined
     if (indexClienteAFinalizar >= 0) {
-      estadoActual.colaClientes[indexClienteAFinalizar].estado = CLIENTE_FINALIZADO
+      estadoActual.colaClientes[indexClienteAFinalizar].estado = CLIENTE_FINALIZADO;
     }
 
     const evento = FIN_ATENCION_CLIENTE;
@@ -30,8 +30,7 @@ export class GestsorAtencionService {
     const reparadores = {...estadoActual.reparadores};
     const relojActual = estadoActual.reloj;
 
-    // debemos asignar el nuevo cliente ?
-    if (largoCola > 0) { // DEBO ASIGNAR CLIENTE
+    if (largoCola > 0) { // DEBO ASIGNAR CLIENTE AL REPARADOR
 
       // generamos el reparador ocupado sin cliente
       const reparadorOcupado = generarReparadorOcupado(relojActual);
