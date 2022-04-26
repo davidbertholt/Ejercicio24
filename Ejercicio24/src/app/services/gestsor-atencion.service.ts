@@ -16,7 +16,8 @@ export class GestsorAtencionService {
   finalizarAtencionCliente(estadoActual: IEstadoActual, reparador: number): IEstadoActual {
     // Finalizamos al cliente actual
     const clienteReparador = estadoActual.reparadores[reparador].cliente;
-    const indexClienteAFinalizar = estadoActual.colaClientes.findIndex((cli: { orden: number | undefined; }) => cli.orden === clienteReparador?.orden ) ?? undefined
+    const indexClienteAFinalizar = clienteReparador? clienteReparador.orden - 1 : -1;
+    //estadoActual.colaClientes.findIndex((cli: { orden: number | undefined; }) => cli.orden === clienteReparador?.orden ) ?? undefined
     if (indexClienteAFinalizar >= 0) {
       estadoActual.colaClientes[indexClienteAFinalizar].estado = CLIENTE_FINALIZADO;
     }

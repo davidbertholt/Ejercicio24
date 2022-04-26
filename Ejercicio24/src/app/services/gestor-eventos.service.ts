@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 // Observables
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { IEstadoActual } from '../Interfaces/IEstado';
 import { I3Reparadores } from '../Interfaces/IReparador';
 
@@ -22,16 +22,16 @@ import { GestsorLlegadasService } from './gestsor-llegadas.service';
 })
 export class GestorEventosService {
 
-  private gestorSimulacion = new Subject<any>();
-  public gestorSimulacion$ = this.gestorSimulacion.asObservable();
+  private gestorSimulacion: Subject<any>;
+  public gestorSimulacion$: Observable<any>;
 
   precioTotal = 0;
-  private precioEmitir = new Subject<number>();
-  public preciosEmitir$ = this.precioEmitir.asObservable();
+  private precioEmitir: Subject<number>;
+  public preciosEmitir$: Observable<number>;
 
   gastoTotal = 0;
-  private gastosEmitir = new Subject<number>();
-  public gastosEmitir$ = this.gastosEmitir.asObservable();
+  private gastosEmitir: Subject<number>;
+  public gastosEmitir$: Observable<number>;
 
   // keys de proximo tiempo
   tiempoProximaLLegada = MAX_NUMBER;
@@ -39,7 +39,8 @@ export class GestorEventosService {
   finReparador2 = MAX_NUMBER + 2;
   finReparador3 = MAX_NUMBER + 3;
 
-  estadoActual!: IEstadoActual;
+  colaEventos: IEstadoActual[] = [];
+  // estadoActual!: IEstadoActual;
 
   reparadorEnEspera!: string | undefined;
 
@@ -47,6 +48,12 @@ export class GestorEventosService {
     private gestsorLlegadasService: GestsorLlegadasService,
     private gestsorAtencionService: GestsorAtencionService
     ) {
+    this.gestorSimulacion = new Subject<any>();
+    this.gestorSimulacion$ = this.gestorSimulacion.asObservable();
+    this.precioEmitir = new Subject<number>();
+    this.preciosEmitir$ = this.precioEmitir.asObservable();
+    this.gastosEmitir = new Subject<number>();
+    this.gastosEmitir$ = this.gastosEmitir.asObservable();
     this.setearInicial();
   }
 
@@ -71,16 +78,22 @@ export class GestorEventosService {
   start(horas: number) {
     this.setearInicial();
     const minutos = horasAMiutos(horas)
-    this.iniciarSimulacion(minutos)
+    const estadoInicial = this.generarEstadoInicial()
+    this.iniciarSimulacion(minutos, estadoInicial)
+
+    this.precioEmitir.next(this.precioTotal);
+    this.gastosEmitir.next(this.gastoTotal);
+    this.gestorSimulacion.next(this.colaEventos);
+
   }
 
-  hayReparadorLibre() {
-    const keys = Object.keys(this.estadoActual.reparadores);
+  hayReparadorLibre(estadoActual: IEstadoActual) {
+    const keys = Object.keys(estadoActual.reparadores);
     return keys.find((key) =>
-      this.estadoActual.reparadores[Number(key)].estado === REPARADOR_LIBRE);
+      estadoActual.reparadores[Number(key)].estado === REPARADOR_LIBRE);
   }
 
-  generarEstadoInicial () {
+  generarEstadoInicial (): IEstadoActual {
     const llegadaInicial = obtenerTiempoEntreLlegada();
 
     const llegadasNuevas = {
@@ -93,21 +106,19 @@ export class GestorEventosService {
       llegadas: llegadasNuevas,
     };
 
-    this.estadoActual = {...nuevoEstado}
+    // this.gestorSimulacion.next(nuevoEstado);
+    this.colaEventos.push(nuevoEstado);
+    return {...nuevoEstado}
   }
 
-  iniciarSimulacion (tiempo: number) {
-    this.generarEstadoInicial();
-    this.gestorSimulacion.next(this.estadoActual)
+  iniciarSimulacion (tiempo: number, nuevoEstado: IEstadoActual) {
+    this.tiempoProximaLLegada = nuevoEstado.llegadas.tiempoProximaLlegada;
 
-    this.tiempoProximaLLegada = this.estadoActual.llegadas.tiempoProximaLlegada;
-
-    let proxEvento = this.estadoActual.llegadas.tiempoProximaLlegada;
+    let proxEvento = nuevoEstado.llegadas.tiempoProximaLlegada;
 
     while (proxEvento < tiempo) {
-      this.reparadorEnEspera = this.hayReparadorLibre();
+      this.reparadorEnEspera = this.hayReparadorLibre(nuevoEstado);
 
-      let nuevoEstado = {...this.estadoActual};
       let colaPrevia = 0;
       nuevoEstado.reloj= proxEvento;
 
@@ -168,16 +179,16 @@ export class GestorEventosService {
           break;
       }
 
-      this.gestorSimulacion.next(nuevoEstado);
+      this.colaEventos.push(nuevoEstado);
 
-      this.estadoActual = {...nuevoEstado}
+      // this.gestorSimulacion.next(nuevoEstado);
+
+      // estadoActual = {...nuevoEstado}
 
       proxEvento = Math.min(this.tiempoProximaLLegada, this.finReparador1, this.finReparador2, this.finReparador3);
 
     }
-    this.precioEmitir.next(this.precioTotal);
-    this.gastosEmitir.next(this.gastoTotal);
-   }
+  }
 
   actualizarFinReparacion(reparadores: I3Reparadores, reparador: number) {
     switch(reparador) {

@@ -1,14 +1,11 @@
 import { INFERIOR_LLEGADA, INFERIOR_PRECIO, MEDIA_EXPONENCIAL, SUPERIOR_LLEGADA, SUPERIOR_PRECIO } from "./contantes";
 
 function obtenerUniforme (limiteInferior: number, limiteSuperior: number): number {
-    const amplitud = limiteSuperior - limiteInferior;
-    const rnd = Math.random();
-    return limiteInferior + rnd * amplitud;
+    return limiteInferior +  Math.random() * (limiteSuperior - limiteInferior);
 }
 
 function obtenerExponencial (media: number): number  {
-    const rnd = Math.random();
-    return -media * Math.log(1-rnd);
+    return -media * Math.log(1-Math.random());
 }
 
 export function horasAMiutos ( horas: number ): number  {return horas * 60;}

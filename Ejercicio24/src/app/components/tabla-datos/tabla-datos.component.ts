@@ -34,7 +34,7 @@ export class TablaDatosComponent implements OnInit {
       if (data === 'reset') {
         this.resetear()
       } else {
-        this.historialEventos.push(data);
+        this.historialEventos = data;
       }
     });
     this.gestorSimulacion.gastosEmitir$.subscribe(data => this.costoFinal = data)
